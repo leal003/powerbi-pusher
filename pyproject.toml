@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phaze"
+version = "1.0.0"
+description = "Automacao silenciosa para Power BI Desktop"
+dependencies = [
+    "pywinauto",
+    "psutil",
+    "pywin32"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

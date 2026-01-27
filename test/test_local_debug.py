@@ -3,59 +3,51 @@ import os
 import sys
 import time
 
-# Hack para importar a lib 'src'
+# Setup para importar a biblioteca da pasta src
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+from phaze.local_ops import Phaze
 
-from powerbi_pusher.local_ops import PowerBIDriver
-from powerbi_pusher.exceptions import LocalAutomationError
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', datefmt='%H:%M:%S')
 
-# Configuração de Logs
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# --- CONFIGURACAO DO TESTE ---
+NOME_JANELA = "BACKOFFICE ILHAS 2026 v2"
 
-# --- CONFIGURAÇÃO ---
-ARQUIVO_TESTE = r"C:\Users\U5512793\Downloads\Painel de Pendências - BackOffice.pbix"
-NOME_JANELA_FORCADO = "Painel de Pendências - BackOffice" 
-FECHAR_AO_FINAL = False 
+def main():
+    print("\n--- TESTE DE FLUXO MODULAR (Maestro v1.1.4) ---")
+    
+    # 1. Instancia a biblioteca
+    bot = Phaze()
 
-# Tempo que você sabe que o BI leva para atualizar (ex: 5 minutos)
-TEMPO_ESPERA_ATUALIZACAO = 60 
-# --------------------
+    # 2. Conecta (Isso move a janela para o Limbo -30000 para protecao)
+    print("\n[1] Conectando...")
+    if not bot.connect(window_name=NOME_JANELA):
+        print("Erro: Janela nao encontrada.")
+        return
 
-def teste_fluxo_cronometrado():
-    print(f"--- 🚀 INICIANDO TESTE (Fluxo Cronometrado) ---")
-    driver = PowerBIDriver()
+    # 3. Chama a ferramenta REFRESH
+    # O robo monitora o popup e fecha. A janela principal continua oculta.
+    print("\n[2] Executando Atualizacao...")
+    if bot.refresh():
+        print("Atualizacao finalizada (Popup fechado).")
+    else:
+        print("Falha na atualizacao.")
+        bot.bring_back() # Traz de volta para ver o erro
+        return
 
-    try:
-        # 1. Conectar e enviar para o limbo
-        if not driver.connect(file_path=ARQUIVO_TESTE, window_name=NOME_JANELA_FORCADO):
-            print("❌ Falha na conexão inicial.")
-            return
+    # 4. Chama a ferramenta SAVE
+    # ATENCAO: Agora ele salva via Teclado (Alt+1 / Ctrl+S) SEM trazer a janela
+    # de volta para a tela, evitando o crash do WebView2.
+    print("\n[3] Salvando Arquivo (Modo Blind/Teclado)...")
+    if bot.save():
+        print("Comandos de salvar enviados.")
+    else:
+        print("Falha ao salvar.")
 
-        # 2. Preparar aba
-        driver.go_to_home_tab()
-
-        # 3. Disparar Refresh
-        if driver.click_refresh():
-            print(f"🔄 Atualização iniciada. Aguardando {TEMPO_ESPERA_ATUALIZACAO}s...")
-            
-            # ESPERA MANUAL: Aqui o script aguarda o tempo definido
-            time.sleep(TEMPO_ESPERA_ATUALIZACAO)
-            
-            # 4. Forçar o fechamento do popup (agora que o tempo passou)
-            print("🎯 Chamando função para fechar popup...")
-            driver.close_refresh_popup()
-
-            # 5. Salvar
-            driver.save()
-            print("\n✅ PROCESSO CONCLUÍDO E SALVO.")
-        else:
-            print("❌ Não foi possível clicar no botão Atualizar.")
-
-    except Exception as e:
-        print(f"\n☠️ ERRO DURANTE O TESTE: {e}")
-    finally:
-        if FECHAR_AO_FINAL:
-            driver.close()
+    # 5. Fim (So AGORA trazemos a janela de volta para conferencia visual)
+    print("\n[4] Processo Concluido. Restaurando janela...")
+    bot.bring_back() 
+    
+    # bot.close() # Descomente se quiser fechar o app no final
 
 if __name__ == "__main__":
-    teste_fluxo_cronometrado()
+    main()

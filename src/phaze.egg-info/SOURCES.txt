@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+src/phaze/__init__.py
+src/phaze/exceptions.py
+src/phaze/local_ops.py
+src/phaze.egg-info/PKG-INFO
+src/phaze.egg-info/SOURCES.txt
+src/phaze.egg-info/dependency_links.txt
+src/phaze.egg-info/requires.txt
+src/phaze.egg-info/top_level.txt
+test/test_local_debug.py

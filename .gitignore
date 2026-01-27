@@ -20,3 +20,5 @@ debug_full_tree.py
 debug_spy_live.py
 debug_windows.py
 powerbi_ui_tree.txt
+
+.pypirc

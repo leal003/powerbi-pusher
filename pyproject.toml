@@ -1,11 +1,17 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "phaze"
-version = "1.0.0"
+version = "1.1.4"
 description = "Automacao silenciosa para Power BI Desktop"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "GNU GPLv3"}
+authors = [
+    {name = "Seu Nome", email = "seu-email@exemplo.com"}
+]
 dependencies = [
     "pywinauto",
     "psutil",

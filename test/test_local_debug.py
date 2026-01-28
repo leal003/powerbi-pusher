@@ -10,10 +10,10 @@ from phaze.local_ops import Phaze
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', datefmt='%H:%M:%S')
 
 # --- CONFIGURACAO DO TESTE ---
-NOME_JANELA = "BACKOFFICE ILHAS 2026 v2"
+NOME_JANELA = "NOME_JANELA"
 
 def main():
-    print("\n--- TESTE DE FLUXO MODULAR (Maestro v1.1.4) ---")
+    print("\n--- TESTE DE FLUXO MODULAR ---")
     
     # 1. Instancia a biblioteca
     bot = Phaze()

@@ -35,7 +35,7 @@ pip install phaze
 A Phaze v1.2.0 funciona como um "Toolkit Modular". Você decide a ordem das ações. 
 Phaze v1.2.0 operates as a "Modular Toolkit". You decide the order of actions.
 
-# Exemplo Completo (The Maestro Script)
+# Exemplo
 ```
 import time
 from phaze.local_ops import Phaze

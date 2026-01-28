@@ -25,10 +25,9 @@
 
 ## Instalação / Installation
 
-```bash
-pip install phaze
+bash
 
-```
+```pip install phaze ```
 
 ## Como Usar / How to Use
 

@@ -27,7 +27,7 @@
 
 bash
 
-```pip install phaze ```
+```pip install phaze```
 
 ## Como Usar / How to Use
 

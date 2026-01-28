@@ -1,4 +1,4 @@
-# Phaze v1.1.4
+# Phaze v1.2.0
 
 **[PT]** Biblioteca para automação silenciosa, robusta e "headless" do Microsoft Power BI Desktop.
 **[EN]** Library for silent, robust, and "headless" automation of Microsoft Power BI Desktop.
@@ -9,87 +9,92 @@
 
 ### Português
 
-* **Limbo Mode:** Move a janela do Power BI para coordenadas negativas (-30000), permitindo que você continue usando o computador enquanto o robô trabalha.
-* **Kernel Force Save:** Ignora falhas de clique visual. Utiliza injeção direta de mensagens no Kernel do Windows (`PostMessage` com Scan Codes reais) para forçar o salvamento (Ctrl+S) mesmo com a janela oculta.
-* **Crash Recovery:** Detecta e trata automaticamente o erro "Há um problema com o WebView2" que ocorre ao renderizar gráficos fora da tela.
-* **Smart Refresh:** Monitora a estabilidade visual do popup de atualização e detecta janelas que fecham sozinhas (Auto-Close).
+* **Virtual Desktop Isolation:** Em vez de apenas esconder a janela, a Phaze move o Power BI para uma Área de Trabalho Virtual (Desktop 2). Isso garante que o Power BI continue renderizando gráficos (evitando erros do WebView2) sem atrapalhar o seu mouse ou teclado no Desktop Principal.
+* **Hybrid Force Save:** O sistema de salvamento mais robusto até agora. Combina **Cliques Visuais** (botão disquete) com **Injeção de Hardware** (`SendInput` + `PostMessage`). É impossível para o Power BI ignorar o comando de salvar.
+* **Strobe Smart Refresh:** Monitoramento intermitente inteligente. O robô mantém o PBI oculto e o traz para o topo por milissegundos a cada 60s para verificar o status visualmente (leitura 100% precisa), devolvendo-o imediatamente. Se detectar estabilidade, reduz o intervalo para 5s para confirmação final.
+* **Crash Recovery:** Detecta e trata automaticamente o erro "Há um problema com o WebView2" e janelas de Auto-Close.
 
 ### English
 
-* **Limbo Mode:** Moves the Power BI window to negative coordinates (-30000), allowing you to use the computer while the bot works.
-* **Kernel Force Save:** Bypasses visual click failures. Uses direct Kernel message injection (`PostMessage` with real Scan Codes) to force save (Ctrl+S) even when the window is hidden.
-* **Crash Recovery:** Automatically detects and handles the "There is a problem with WebView2" error that occurs when rendering charts off-screen.
-* **Smart Refresh:** Monitors the visual stability of the refresh popup and detects windows that close automatically (Auto-Close).
+* **Virtual Desktop Isolation:** Instead of just hiding the window, Phaze moves Power BI to a Virtual Desktop (Desktop 2). This ensures Power BI continues rendering charts (avoiding WebView2 errors) without disturbing your mouse or keyboard on the Main Desktop.
+* **Hybrid Force Save:** The most robust saving system to date. Combines **Visual Clicks** (save button) with **Hardware Injection** (`SendInput` + `PostMessage`). It is impossible for Power BI to ignore the save command.
+* **Strobe Smart Refresh:** Intelligent intermittent monitoring. The bot keeps PBI hidden and brings it to the front for milliseconds every 60s to check status visually (100% accurate reading), returning it immediately. If stability is detected, it reduces the interval to 5s for final confirmation.
+* **Crash Recovery:** Automatically detects and handles "There is a problem with WebView2" errors and Auto-Close windows.
 
 ---
 
 ## Instalação / Installation
 
 ```bash
-pip install phaze.
+pip install phaze
+
+```
 
 ## Como Usar / How to Use
 
-A Phaze v1.1.4 funciona como um "Toolkit Modular". Você decide a ordem das ações.Phaze v1.1.4 operates as a "Modular Toolkit". 
-You decide the order of actions.
+A Phaze v1.2.0 funciona como um "Toolkit Modular". Você decide a ordem das ações. 
+Phaze v1.2.0 operates as a "Modular Toolkit". You decide the order of actions.
 
 # Exemplo Completo (The Maestro Script)
-
-import time from phaze.local_ops import Phaze
+```
+import time
+from phaze.local_ops import Phaze
 
 # Configuração
 NOME_JANELA = "Nome do Seu Arquivo PBI"
 
 def main():
-    # 1. Inicializa
-    bot = Phaze()
+    # 1. Inicializa / Initialize
+    driver = Phaze()
 
-    # 2. Conecta (A janela será movida para o Limbo imediatamente)
+    # 2. Conecta / Connect
+    # A janela será movida para o Desktop 2 (Background) imediatamente.
+    # The window will be moved to Desktop 2 (Background) immediately.
     print("Conectando...")
-    if not bot.connect(window_name=NOME_JANELA):
+    if not driver.connect(window_name=NOME_JANELA):
         print("Janela não encontrada.")
         return
 
-    # 3. Atualiza (Refresh)
-    # O robô clica, monitora o popup, fecha e aguarda estabilização (cool-down)
+    # 3. Atualiza / Refresh (Strobe Strategy)
     print("Atualizando dados...")
-    if bot.refresh():
+    
+    # O robô vai checar o status visualmente a cada 60s (Strobe)
+    if driver.refresh():
         print("Atualização concluída com sucesso.")
     else:
         print("Falha na atualização.")
-        bot.bring_back() # Traz de volta para ver o erro
+        driver.bring_back()
         return
 
-    # 4. Salva (Save)
-    # Usa injeção de Kernel. Funciona mesmo com a janela invisível.
+    # 4. Salva / Save (Hybrid)
+    # Tenta clicar no botão, se falhar, usa injeção de teclado físico.
     print("Salvando...")
-    if bot.save():
+    if driver.save():
         print("Comando de salvar enviado.")
     else:
         print("Erro ao salvar.")
 
-    # 5. Finaliza
-    # Traz a janela de volta para a tela principal
-    bot.bring_back() 
+    # 5. Finaliza / Finish
+    driver.bring_back() 
     print("Processo finalizado.")
 
 if __name__ == "__main__":
     main()
-
+```
 ## Índice de Drivers (API Reference)
 
 A classe `Phaze` expõe os seguintes métodos para controle total:
 
 | Método / Method | Descrição (PT) | Description (EN) |
 | :--- | :--- | :--- |
-| `connect(window_name)` | Localiza a janela, conecta ao processo e ativa o **Limbo Mode** (oculta a janela). | Locates the window, connects to the process, and activates **Limbo Mode** (hides the window). |
-| `refresh()` | Executa o ciclo completo: Clica em Atualizar > Monitora Estabilidade > Fecha Popup > Trata Erros WebView2. | Runs full cycle: Click Refresh > Monitor Stability > Close Popup > Handle WebView2 Errors. |
-| `save()` | Tenta salvar usando **Hardware Injection** (PostMessage) e Atalhos de Teclado. Não requer mouse. | Attempts to save using **Hardware Injection** (PostMessage) and Keyboard Shortcuts. Mouse-free. |
-| `bring_back()` | Restaura a janela do Limbo para a posição (0,0) na tela principal. | Restores the window from Limbo to position (0,0) on the main screen. |
+| `connect(window_name)` | Localiza a janela, conecta ao processo e a move para o **Virtual Desktop 2**. | Locates the window, connects to the process, and moves it to **Virtual Desktop 2**. |
+| `refresh()` | Executa a **Strobe Strategy**: Traz para frente > Lê Status > Esconde. Intervalos inteligentes de 60s/5s. | Runs **Strobe Strategy**: Bring to front > Read Status > Hide. Smart intervals of 60s/5s. |
+| `save()` | Salva usando método **Híbrido**: Clique Visual + Hardware Injection (Ctrl+S). | Saves using **Hybrid** method: Visual Click + Hardware Injection (Ctrl+S). |
+| `bring_back()` | Traz a janela do Desktop Virtual de volta para o Desktop Principal. | Brings the window from the Virtual Desktop back to the Main Desktop. |
 | `close()` | Encerra forçadamente o processo do Power BI (Kill process). | Forcefully terminates the Power BI process. |
 
 ## Contribuição / Contributing
 
 - Faça um Fork do projeto.
-- Crie uma branch para sua modificação: git checkout -b feature/melhoria-direta.
+- Crie uma branch para sua modificação: ``` git checkout -b feature/melhoria-direta ```.
 - Envie um Pull Request detalhando o que foi feito.
